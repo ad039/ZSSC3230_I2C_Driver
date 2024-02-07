@@ -21,7 +21,7 @@
 #include "Arduino.h"
 #include <Wire.h>
 
-#define DEBUG_ZSSC3230 1
+#define DEBUG_ZSSC3230 0
 
 
 // i2c write definitions for the ZSSC3230
