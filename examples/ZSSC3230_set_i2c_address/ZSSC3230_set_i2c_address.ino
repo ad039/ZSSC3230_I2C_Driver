@@ -6,7 +6,7 @@ Date: January 22, 2024
 This example shows how to change the i2c address of the ZSSC3230
 */
 
-#include <ZSSC3230.h>
+#include <ZSSC3230_I2C_Driver.h>
 #include <Wire.h>
 
 ZSSC3230 zssc3230;

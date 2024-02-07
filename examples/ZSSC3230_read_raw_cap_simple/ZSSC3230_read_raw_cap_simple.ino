@@ -7,7 +7,7 @@ This example shows how to read the raw analog to digital converted (ADC) capacit
 The values are read at the default range +/-15pF, default zero shift offset +15pF and default ADC resolution 12 bit
 */
 
-#include <ZSSC3230.h>
+#include <ZSSC3230_I2C_Driver.h>
 #include <Wire.h>
 
 // create a ZSSC3230 object

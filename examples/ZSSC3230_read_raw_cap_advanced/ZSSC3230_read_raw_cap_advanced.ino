@@ -7,7 +7,7 @@ This example shows how to read the raw analog to digital converted (ADC) capacit
 It also shows how to adjust the range, zero shift offset and ADC resolution
 */
 
-#include <ZSSC3230.h>
+#include <ZSSC3230_I2C_Driver.h>
 #include <Wire.h>
 
 // create a ZSSC3230 object

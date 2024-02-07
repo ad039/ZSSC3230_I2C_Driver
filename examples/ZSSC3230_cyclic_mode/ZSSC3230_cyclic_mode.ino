@@ -7,7 +7,7 @@ This example shows how to set the sensor in cyclic mode and read its ssc capacit
 Before running this example and getting meaninful results, the sensor should be calibrated
  */
 
-#include <ZSSC3230.h>
+#include <ZSSC3230_I2C_Driver.h>
 #include <Wire.h>
 
 // create a ZSSC3230 object

@@ -7,7 +7,7 @@ This example shows how to read the signal conditioned capacitance from two ZSSC3
 Before running this example and getting meaninful results, the sensor should be calibrated and one of the sensor addresses changed to 0x47 using the ZSSC3230_set_i2c_address example
  */
 
-#include <ZSSC3230.h>
+#include <ZSSC3230_I2C_Driver.h>
 #include <Wire.h>
 
 // initialise ZSSC3230 objects
