@@ -9,11 +9,14 @@ For this you will need three known capacitors within the range you want to measu
 You will also need to download the ZSSC323x Evaluation Software available at: https://www.renesas.com/us/en/products/sensor-products/sensor-signal-conditioners-ssc-afe/zssc3230-low-power-high-resolution-capacitive-sensor-signal-conditioner#design_development
  */
 
-#include <ZSSC3230.h>
+#include <ZSSC3230_I2C_Driver.h>
 #include <Wire.h>
 
 // create a ZSSC3230 object
 ZSSC3230 zssc3230;
+
+// Coeeficient Varibles
+int32_t Offset_S, Gain_S, SOT_S;
 
 
 
@@ -38,6 +41,7 @@ void setup() {
       delay(500);
     }
   }
+  
 
   Serial.println();
   Serial.println("This is a calibration guide for the ZSSC3230. Please ensure you have: ");
@@ -49,78 +53,101 @@ void setup() {
   delay(10);
 
   // Configure the sensor as you desire. This is important as the calibration will be done for this specific configuration
-  zssc3230.configure_sensor(TYPE_DIFFERENTIAL, LEAKAGE_CANCELLATION_OFF, RANGE_15_pF_0, NOISE_MODE_OFF, ADC_12_BIT, OFFSET_15_pF_0);
+  //zssc3230.configure_sensor(TYPE_DIFFERENTIAL, LEAKAGE_CANCELLATION_OFF, RANGE_15_pF_0, NOISE_MODE_OFF, ADC_12_BIT, OFFSET_15_pF_0);
   
   delay(10);
 
   // record the first capacitance point:
   // ask for capacitor 1 to be placed into the sensor and wait for the user to begin recording
+  while (Serial.available())
+        Serial.read(); //Trash any incoming chars
   Serial.println("1. Place your first known capacitor into the sensor. Press any key when ready... ");
-  while (!Serial)
+  delay(10);
+  while (!Serial.available()) {
     delay(10);
+  }
 
   // record an averaged adc reading
   Serial.print("The Averaged ADC value for this capacitance is: ");
   Serial.print(average_raw_cap());
-  Serial.println(". Please record this value!")
+  Serial.println(". Please record this value!");
 
   // record the second capacitance point:
   // ask for capacitor 2 to be placed into the sensor and wait for the user to begin recording
+  while (Serial.available())
+        Serial.read(); //Trash any incoming chars
   Serial.println("2. Place your second known capacitor into the sensor. Press any key when ready... ");
-  while (!Serial)
+  while (!Serial.available()) {
     delay(10);
+  }
 
   // record an averaged adc reading
   Serial.print("The Averaged ADC value for this capacitance is: ");
   Serial.print(average_raw_cap());
-  Serial.println(". Please record this value!")
+  Serial.println(". Please record this value!");
 
   // record the third capacitance point:
   // ask for capacitor 3 to be placed into the sensor and wait for the user to begin recording
+  while (Serial.available())
+        Serial.read(); //Trash any incoming chars
   Serial.println("3. Place your third known capacitor into the sensor. Press any key when ready... ");
-  while (!Serial)
+  while (!Serial.available()) {
     delay(10);
+  }
 
   // record an averaged adc reading
   Serial.print("The Averaged ADC value for this capacitance is: ");
   Serial.print(average_raw_cap());
-  Serial.println(". Please record this value!")
+  Serial.println(". Please record this value!");
 
   Serial.println();
-  Serial.println("3. Now open the ZSSC323x Evaluation Software->Calibration tab");
-  Serial.println("4. In the 'Type' dropdown, select 3 Points: S(O + G + SOT) and make sure Curve is set to Parabolic");
-  Serial.println("5. Enter the percentage of the full scale input for each of your target capacitances.");
+  Serial.println("4. Now open the ZSSC323x Evaluation Software->Calibration tab");
+  Serial.println("5. In the 'Type' dropdown, select 3 Points: S(O + G + SOT) and make sure Curve is set to Parabolic");
+  Serial.println("6. Enter the percentage of the full scale input for each of your target capacitances.");
   Serial.println("    e.g if range is set as +/-15pF and zero offset is 15pF, a 10pF capacitor would be 33%");
-  Serial.println("6. Click 'Calculate Coefficients'");
+  Serial.println("7. Click 'Calculate Coefficients'");
 
   delay(1000);
 
   while(1) {
+
+    while (Serial.available())
+        Serial.read(); //Trash any incoming chars
     Serial.println("Please enter your OFFSET_S value:");
     while (Serial.available() == false)
       ; //Wait for user to send character
 
-    int32_t Offset_S = Serial.parseInt(); //Get Offset_s from user
+    Offset_S = Serial.parseInt(); //Get Offset_s from user
 
+    delay(1000);
+
+    while (Serial.available())
+        Serial.read(); //Trash any incoming chars
     Serial.println("Please enter your GAIN_S value:");
     while (Serial.available() == false)
       ; //Wait for user to send character
 
-    int32_t Offset_S = Serial.parseInt(); //Get Gain_s from user
+    Gain_S = Serial.parseInt(); //Get Gain_s from user
+    delay(1000);
 
+    while (Serial.available())
+        Serial.read(); //Trash any incoming chars
     Serial.println("Please enter your SOT_S value:");
     while (Serial.available() == false)
       ; //Wait for user to send character
 
-    int32_t Offset_S = Serial.parseInt(); //Get SOT_s from user
+    SOT_S = Serial.parseInt(); //Get SOT_s from user
+    delay(1000);
 
     Serial.print("Are these the values you entered? OFFSET_S = ");
-    Serial.print(OFFSET_S);
+    Serial.print(Offset_S);
     Serial.print(", GAIN_S = ");
-    Serial.print(GAIN_S);
-    Serial.print(", SOT_S");
+    Serial.print(Gain_S);
+    Serial.print(", SOT_S = ");
     Serial.print(SOT_S);
-    Serial.println("Enter y if yes, enter n if no: ");
+    Serial.println(". Enter y if yes, enter n if no: ");
+    while (Serial.available())
+        Serial.read(); //Trash any incoming chars
     while (Serial.available() == false)
       ;
     byte incoming = Serial.read();
@@ -131,14 +158,17 @@ void setup() {
   
   }
 
-  // run calibrate_sensor function. This takes the Offset_S, the Gain_S and the SOT_S as inputs.
-  if (zssc3230.calibrate_sensor(Offset_S, Gain_S, SOT_S)){
+  delay(1000);
+
+  // run calibrate_sensor function. This takes the Offset_S, the Gain_S and the SOT_S as inputs.  
+  if (zssc3230.calibrate_zssc3230(Offset_S, Gain_S, SOT_S)){
     Serial.println("Calibrated successfuly!");
   }
   else {
     Serial.println("Calibration failed, please try again");
   }
 
+  delay(1000);
 }
 
 void loop() {
