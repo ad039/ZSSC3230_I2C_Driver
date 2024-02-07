@@ -14,8 +14,8 @@
 
 
 
-#ifndef ZSSC3230_h
-#define ZSSC3230_h
+#ifndef ZSSC3230_I2C_Driver_h
+#define ZSSC3230_I2C_Driver_h
 
 
 #include "Arduino.h"

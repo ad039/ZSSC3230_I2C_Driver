@@ -1,4 +1,4 @@
-#include "ZSSC3230.h"
+#include "ZSSC3230_I2C_Driver.h"
 
 /*
 @brief initialise the sensor
