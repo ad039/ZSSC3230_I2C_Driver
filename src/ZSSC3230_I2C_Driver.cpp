@@ -122,7 +122,8 @@ float ZSSC3230::read_ssc_cap(void)
 
 	read_zssc3230(buffer, 4);		// read the ssc measurment
 
-	uint32_t ssc_cap = buffer[1] << 16 | buffer[2] << 8 | buffer[3];
+	uint32_t ssc_cap = ((uint32_t)buffer[1] << 16 )| ((uint32_t)buffer[2] << 8) | ((uint32_t)buffer[3]);
+
 	return (ssc_cap * 2 * _capRange / 16777216.0f) + (_capOffset - _capRange);
 }
 
@@ -137,7 +138,7 @@ float ZSSC3230::read_ssc_cap_cyc(void)
 
 	read_zssc3230(buffer, 4);		// read the ssc measurment
 
-	uint32_t ssc_cap = buffer[1] << 16 | buffer[2] << 8 | buffer[3];	// convert the i2c buffer to a 32 bit unsigned int
+	uint32_t ssc_cap = ((uint32_t)buffer[1] << 16) | ((uint32_t)buffer[2] << 8) | ((uint32_t)buffer[3]);	// convert the i2c buffer to a 32 bit unsigned int
 	return (ssc_cap * 2 * _capRange / 16777216.0f) + (_capOffset - _capRange);	// return the ssc capacitance
 }
 
@@ -157,7 +158,7 @@ float ZSSC3230::read_raw_temp(void)
 
 	read_zssc3230(buffer, 4);		// read the raw temp measurment
 
-	int temp_raw = (buffer[1] << 16 | buffer[2] << 8 | buffer[3]) & 0x3FFF;
+	int temp_raw = (((uint32_t)buffer[1] << 16) | ((uint32_t)buffer[2] << 8) | ((uint32_t)buffer[3])) & 0x3FFF;
 
 	return _mapf(temp_raw, 0, (0x3FFF - 1), -40, 125);
 }
@@ -178,7 +179,7 @@ int32_t ZSSC3230::read_raw_cap(void)
 
 	read_zssc3230(buffer, 4);		// read the raw cap measurment
 
-	uint32_t cap_raw = buffer[1] << 16 | buffer[2] << 8 | buffer[3];
+	uint32_t cap_raw = ((uint32_t)buffer[1] << 16) | ((uint32_t)buffer[2] << 8) | ((uint32_t)buffer[3]);
 	return _sign_extend_24_32(cap_raw);
 }
 
@@ -204,7 +205,7 @@ Can make a measurement reading, Raw ADC reading or read from NVM memory
 
 @return true if the number of bytes in the i2c transfer is equal to the desired length
 */
-bool ZSSC3230::read_zssc3230(uint8_t *buffer, int len)
+bool ZSSC3230::read_zssc3230(uint8_t *buffer, uint8_t len)
 {	
 	// request information from the sensor
 	_i2cPort->requestFrom(_deviceAddress, len);  // Request 4 bytes from slave device @ address _deviceAddress
@@ -361,7 +362,7 @@ bool ZSSC3230::configure_sensor(SENSCAP_TYPE sct, SENSOR_LEAKAGE slc, CAP_RANGE 
 
 @return true if all i2c writes have been successfull
 */
-bool ZSSC3230::calibrate_zssc3230(int Offset_S, int Gain_S, int SOT_S) 
+bool ZSSC3230::calibrate_zssc3230(int32_t Offset_S, int32_t Gain_S, int32_t SOT_S) 
 {
 	uint8_t status1 = 0;
 
@@ -376,6 +377,20 @@ bool ZSSC3230::calibrate_zssc3230(int Offset_S, int Gain_S, int SOT_S)
 	uint32_t Gain_S_Mag = abs(Gain_S);
 	uint32_t SOT_S_Mag = abs(SOT_S);
 
+#if DEBUG_ZSSC3230 == 1
+	Serial.print("Debug Offset S in Sign Mag: ");
+	Serial.print(sign_offset_s, BIN);
+	Serial.print(" - ");
+	Serial.println(Offset_S_Mag, BIN);
+	Serial.print("Debug Gain S in Sign Mag: ");
+	Serial.print(sign_offset_s, BIN);
+	Serial.print(" - ");
+	Serial.println(Gain_S_Mag, BIN);
+	Serial.print("Debug SOT S in Sign Mag: ");
+	Serial.print(sign_offset_s, BIN);
+	Serial.print(" - ");
+	Serial.println(SOT_S_Mag, BIN);
+#endif
 
 	// write bits 15:0 of Offset_S to register 0x03
 	status1 += write_zssc3230(0x23, (Offset_S_Mag & 0x00FFFF));

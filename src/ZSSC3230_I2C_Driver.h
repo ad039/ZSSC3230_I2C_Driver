@@ -203,12 +203,12 @@ public:
 	float read_ssc_cap_cyc(void);
 	float read_raw_temp(void);
 	int32_t read_raw_cap(void);
-	bool read_zssc3230(uint8_t *buffer, int len);
+	bool read_zssc3230(uint8_t *buffer, uint8_t len);
 	uint8_t write_zssc3230(uint8_t regAdd, uint16_t data);
 	uint8_t sleep_mode(void);
 	uint8_t cyclic_mode(void);
 	uint8_t command_mode(void);
-	bool calibrate_zssc3230(int Offset_S, int Gain_S, int SOT_S);
+	bool calibrate_zssc3230(int32_t Offset_S, int32_t Gain_S, int32_t SOT_S);
 	bool configure_sensor(SENSCAP_TYPE sct, SENSOR_LEAKAGE slc, CAP_RANGE cap_range, NOISE_MODE noise_mode, ADC_RES adc_res, CAP_OFFSET cap_shift);
 	bool set_i2c_address(uint8_t i2cAddress);
 

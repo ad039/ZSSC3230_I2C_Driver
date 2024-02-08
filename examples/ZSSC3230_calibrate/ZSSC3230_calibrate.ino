@@ -53,7 +53,7 @@ void setup() {
   delay(10);
 
   // Configure the sensor as you desire. This is important as the calibration will be done for this specific configuration
-  //zssc3230.configure_sensor(TYPE_DIFFERENTIAL, LEAKAGE_CANCELLATION_OFF, RANGE_15_pF_0, NOISE_MODE_OFF, ADC_12_BIT, OFFSET_15_pF_0);
+  zssc3230.configure_sensor(TYPE_DIFFERENTIAL, LEAKAGE_CANCELLATION_OFF, RANGE_15_pF_0, NOISE_MODE_OFF, ADC_12_BIT, OFFSET_15_pF_0);
   
   delay(10);
 
@@ -162,7 +162,7 @@ void setup() {
 
   // run calibrate_sensor function. This takes the Offset_S, the Gain_S and the SOT_S as inputs.  
   if (zssc3230.calibrate_zssc3230(Offset_S, Gain_S, SOT_S)){
-    Serial.println("Calibrated successfuly!");
+    Serial.println("Calibrated successfully!");
   }
   else {
     Serial.println("Calibration failed, please try again");
@@ -172,13 +172,14 @@ void setup() {
 }
 
 void loop() {
-
+  // beign printing out ssc capacitance values
+  Serial.println(zssc3230.read_ssc_cap());
 }
 
 
 int32_t average_raw_cap() {
     // take 100 samples of the capacitance and average them
-  int32_t sum;
+  int32_t sum = 0;
 
   for(int i = 0; i <= 100; i++) {
     sum += zssc3230.read_raw_cap();
