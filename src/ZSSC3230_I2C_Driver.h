@@ -203,6 +203,7 @@ public:
 	float read_ssc_cap_cyc(void);
 	float read_raw_temp(void);
 	int32_t read_raw_cap(void);
+	bool read_nvm_reg(uint8_t *buffer, uint8_t regAdd);
 	bool read_zssc3230(uint8_t *buffer, uint8_t len);
 	uint8_t write_zssc3230(uint8_t regAdd, uint16_t data);
 	uint8_t sleep_mode(void);

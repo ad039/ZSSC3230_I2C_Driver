@@ -194,6 +194,28 @@ int32_t ZSSC3230::_sign_extend_24_32(uint32_t x)
 	return (x ^ m) - m;
 }
 
+/*
+@brief read an nvm register from the ZSSC3230
+
+@param buffer		a pointer to a buffer
+@param regAdd		the memory register you want to read
+*/
+bool read_nvm_reg(uint8_t *buffer, uint8_t regAdd) {
+
+	if (regAdd < 0x00 || regAdd > 0x18) {
+		// it is outside the nvm register bounds
+		return false;
+	}
+
+	write_zssc3230(regAdd, 0);
+
+	delay(1);	// delay to allow the sensor to access its memory
+
+	read_zssc3230(buffer, 3);		// read the raw cap measurment and place onto the buffer
+
+	return true;
+}
+
 
 /*
 @brief read the zssc3230 through i2c.
@@ -303,6 +325,9 @@ bool ZSSC3230::configure_sensor(SENSCAP_TYPE sct, SENSOR_LEAKAGE slc, CAP_RANGE 
 	return false;	// ERROR
 }
 
+/*
+@brief read the config register to update private library variables _sampleDelay, _capRange and _capOffset
+*/
 bool ZSSC3230::_read_zssc3230_config(void) {
 	// define a buffer to store register 0x12 on
 	uint8_t buffer[3];
@@ -313,12 +338,8 @@ bool ZSSC3230::_read_zssc3230_config(void) {
 	uint8_t cap_offset;
 	uint8_t adc_res;
 
-	// ask for register 0x12 data
-	write_zssc3230(0x12, 0x00);
-	
-	delay(2);
 
-	if (read_zssc3230(buffer, 3) == false)
+	if (read_nvm_reg(buffer, 0x12) == false)
 	{
 		return false;
 	}
