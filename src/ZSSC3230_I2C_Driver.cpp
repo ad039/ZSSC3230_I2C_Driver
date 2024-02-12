@@ -411,9 +411,9 @@ bool ZSSC3230::calibrate_zssc3230(int32_t Offset_S, int32_t Gain_S, int32_t SOT_
 	status1 += write_zssc3230(0x29, (SOT_S_Mag & 0x00FFFF));
 
 	delay(10);
-
-	// write sign bit and MSB of SOT_S to register 
-	status1 += write_zssc3230(0x30, (sign_SOT_s << 15 | (SOT_S_Mag & 0x7F0000) >> 8));
+	
+	// write sign bit and MSB of SOT_S to register 0x10
+	status1 += write_zssc3230(0x30, ((sign_SOT_s << 15 | (SOT_S_Mag & 0x7F0000) >> 8)) & 0xFF00);
 
 	delay(10);
 
@@ -445,7 +445,7 @@ bool ZSSC3230::set_i2c_address(uint8_t i2cAddress) {
 	read_zssc3230(buffer, 3);	// read the i2c data with the 0x02 register data
 
 	// gather the bytes into a variable
-	uint16_t interfaceConfig = (buffer[1] << 8) | (buffer[2]);
+	uint16_t interfaceConfig = ((uint16_t)buffer[1] << 8) | ((uint16_t)buffer[2]);
 
 	// take the previous config stored in bits 15:7 of 0x02 and combine it with the new address
 	interfaceConfig = (interfaceConfig & 0xFF80) | (i2cAddress & 0x7F);
