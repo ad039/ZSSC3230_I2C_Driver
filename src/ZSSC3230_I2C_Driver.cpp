@@ -200,7 +200,7 @@ int32_t ZSSC3230::_sign_extend_24_32(uint32_t x)
 @param buffer		a pointer to a buffer
 @param regAdd		the memory register you want to read
 */
-bool read_nvm_reg(uint8_t *buffer, uint8_t regAdd) {
+bool ZSSC3230::read_nvm_reg(uint8_t *buffer, uint8_t regAdd) {
 
 	if (regAdd < 0x00 || regAdd > 0x18) {
 		// it is outside the nvm register bounds
