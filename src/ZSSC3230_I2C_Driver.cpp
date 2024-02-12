@@ -36,17 +36,6 @@ bool ZSSC3230::begin(uint8_t deviceAddress, TwoWire &wirePort)
 
 	delay(10);	// give the sensor time to write to memory
 
-	// set default sensor configuration to be differential mode, sensor leakage cancellation off, Range = +/- 15pF, noise mode off, 12 bit ADC and 15pF zero shift offset
-	if (configure_sensor(TYPE_DIFFERENTIAL, LEAKAGE_CANCELLATION_OFF, RANGE_15_pF_0, NOISE_MODE_OFF, ADC_12_BIT, OFFSET_15_pF_0) == false)
-	{
-#if DEBUG_ZSSC3230 == 1
-		Serial.println("Startup configuration failed");
-#endif
-		return false;
-	}
-		
-	delay(10);	// give the sensor time to write to memory
-
 	return (true); //All done!
 }
 
