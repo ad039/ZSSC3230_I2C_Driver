@@ -29,7 +29,7 @@ bool ZSSC3230::begin(uint8_t deviceAddress, TwoWire &wirePort)
 	if (sleep_mode() != 0)	// enter sleep mode as a defualt
 	{
 #if DEBUG_ZSSC3230 == 1
-		Serial.println("Startup sleep_mode entry failed");
+		Serial.println("Startup sleep mode entry failed");
 #endif
 		return false;
 	}
