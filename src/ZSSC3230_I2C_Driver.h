@@ -222,7 +222,8 @@ private:
 	
 
 	// Methods
-	bool _is_connected();
+	bool _read_zssc3230_config(void);
+	bool _is_connected(void);
 	float _mapf(float x, float in_min, float in_max, float out_min, float out_max);
 	int32_t _sign_extend_24_32(uint32_t x);
 };

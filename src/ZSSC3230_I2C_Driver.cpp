@@ -34,6 +34,16 @@ bool ZSSC3230::begin(uint8_t deviceAddress, TwoWire &wirePort)
 		return false;
 	}
 
+	delay(10); // give the sensor time to write to memory
+
+	// set the sample time for the sensor
+	if (_read_zssc3230_config() == false) {
+#if DEBUG_ZSSC3230 == 1
+		Serial.println("Configuration read failed");
+#endif
+		return false;
+	}
+
 	delay(10);	// give the sensor time to write to memory
 
 	return (true); //All done!
@@ -168,7 +178,7 @@ int32_t ZSSC3230::read_raw_cap(void)
 
 	read_zssc3230(buffer, 4);		// read the raw cap measurment
 
-	uint32_t cap_raw = ((uint32_t)buffer[1] << 16) | ((uint32_t)buffer[2] << 8) | ((uint32_t)buffer[3]);
+	uint32_t cap_raw = (((uint32_t)buffer[1] << 16) & 0x00FF0000) | (((uint32_t)buffer[2] << 8) & 0x0000FF00) | (((uint32_t)buffer[3]) & 0x000000F);
 	return _sign_extend_24_32(cap_raw);
 }
 
@@ -180,7 +190,7 @@ int32_t ZSSC3230::read_raw_cap(void)
 int32_t ZSSC3230::_sign_extend_24_32(uint32_t x) 
 {
 	const int bits = 24;
-	uint32_t m = 1u << (bits - 1);
+	uint32_t m = (uint32_t)1u << (bits - 1);
 	return (x ^ m) - m;
 }
 
@@ -267,21 +277,71 @@ between a sample request from the master and a sample sent from the slave
 @param cap_range		range of the capacitance (0.5 to 16pF)
 @param noise_mode		noise mode (0 = off, 1 = on)
 @param adc_res			analogue to digital comverter resolution
-@param cap_shift		Capacitance zero shift offset
+@param cap_offset		Capacitance zero shift offset
 
 @return true if i2c write completed successfully
 */
-bool ZSSC3230::configure_sensor(SENSCAP_TYPE sct, SENSOR_LEAKAGE slc, CAP_RANGE cap_range, NOISE_MODE noise_mode, ADC_RES adc_res, CAP_OFFSET cap_shift) {
+bool ZSSC3230::configure_sensor(SENSCAP_TYPE sct, SENSOR_LEAKAGE slc, CAP_RANGE cap_range, NOISE_MODE noise_mode, ADC_RES adc_res, CAP_OFFSET cap_offset) {
 	
 	uint8_t status1 = 0;
 
 	// build the configure register out of the function inputs by shifting bits to there requires place
-	uint16_t config = ((sct & 0x01) << 15) | ((slc & 0x01) << 14) | (cap_range & 0x1F) << 9 | (noise_mode & 0x01) << 8 | (adc_res & 0x03) << 6 | (cap_shift & 0x3F);
+	uint16_t config = ((sct & 0x01) << 15) | ((slc & 0x01) << 14) | (cap_range & 0x1F) << 9 | (noise_mode & 0x01) << 8 | (adc_res & 0x03) << 6 | (cap_offset & 0x3F);
 	
 	// write the config to NVM memory location 0x12
 	status1 = write_zssc3230(0x32, config);
 
-	// set the sample delay dependant on the adc resolution and noise mode
+	delay(10);
+
+	// set the sample delay dependant on the adc resolution and noise mode, the cap offset and the cap range in the library
+	_read_zssc3230_config();
+
+	delay(10);
+	if (status1 == 0)
+		return true;	// i2c write completed successfully
+
+	return false;	// ERROR
+}
+
+bool ZSSC3230::_read_zssc3230_config(void) {
+	// define a buffer to store register 0x12 on
+	uint8_t buffer[3];
+
+	// variable to store reuqired parts of the zssc3230 of the zssc3230
+	uint8_t noise_mode;
+	uint8_t cap_range;
+	uint8_t cap_offset;
+	uint8_t adc_res;
+
+	// ask for register 0x12 data
+	write_zssc3230(0x12, 0x00);
+	
+	delay(2);
+
+	if (read_zssc3230(buffer, 3) == false)
+	{
+		return false;
+	}
+	else
+	{
+		noise_mode = buffer[1] & 0x01;
+		cap_range = (buffer[1] & 0x3E) >> 1;
+		cap_offset = buffer[2] & 0x3F;
+		adc_res = (buffer[2] & 0xC0) >> 6;
+
+#if DEBUG_ZSSC3230 == 1
+		Serial.print("Noise Mode = ");
+		Serial.println(noise_mode, BIN);
+		Serial.print("Cap Range = ");
+		Serial.println(cap_range, BIN);
+		Serial.print("Cap Offset = ");
+		Serial.println(cap_offset, BIN);
+		Serial.print("ADC Resolution = ");
+		Serial.println(adc_res, BIN);
+#endif
+	}
+
+	
 	if (noise_mode == NOISE_MODE_OFF) {
 		switch (adc_res) {
 		case ADC_12_BIT:
@@ -317,11 +377,11 @@ bool ZSSC3230::configure_sensor(SENSCAP_TYPE sct, SENSOR_LEAKAGE slc, CAP_RANGE 
 
 	_capRange = (cap_range + 1) / 2;	// convert the input cap_range into a value that can be used for read_ssc_cap and read_ssc_cap_cyc
 
-	// conver the cap_shift into a value that can be used for read_ssc_cap and read_ssc_cap_cyc to give the proper capacitance range and offset
-	if (cap_shift == OFFSET_0_pF_0)
+	// conver the cap_offset into a value that can be used for read_ssc_cap and read_ssc_cap_cyc to give the proper capacitance range and offset
+	if (cap_offset == OFFSET_0_pF_0)
 		_capOffset = 0;
 	else
-		_capOffset = cap_shift / 4;
+		_capOffset = cap_offset / 4;
 
 #if DEBUG_ZSSC3230 == 1
 	Serial.print("Sample delay set to ");
@@ -334,11 +394,8 @@ bool ZSSC3230::configure_sensor(SENSCAP_TYPE sct, SENSOR_LEAKAGE slc, CAP_RANGE 
 	Serial.print(_capOffset);
 	Serial.println("pF");
 #endif
-
-	if (status1 == 0)
-		return true;	// i2c write completed successfully
-
-	return false;	// ERROR
+	
+	return true;
 }
 
 
