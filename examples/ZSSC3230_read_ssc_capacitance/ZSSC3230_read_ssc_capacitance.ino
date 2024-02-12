@@ -34,7 +34,8 @@ void setup() {
 	  }
   }
   
-  
+  // configure the sensor if you need
+  //zssc3230.configure_sensor(TYPE_DIFFERENTIAL, LEAKAGE_CANCELLATION_OFF, RANGE_15_pF_0, NOISE_MODE_OFF, ADC_12_BIT, OFFSET_15_pF_0);
 }
 
 void loop() {
