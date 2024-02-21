@@ -22,6 +22,9 @@ void setup() {
   // begin wire communication
   Wire.begin();
 
+  // enable debugging
+  //zssc3230.enableDebugging();
+
   // initialise the zssc3230 sensor
   while(1) {
 	  if (zssc3230.begin()) {

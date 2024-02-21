@@ -21,8 +21,6 @@
 #include "Arduino.h"
 #include <Wire.h>
 
-#define DEBUG_ZSSC3230 0
-
 
 // i2c write definitions for the ZSSC3230
 typedef enum {
@@ -212,6 +210,8 @@ public:
 	bool calibrate_zssc3230(int32_t Offset_S, int32_t Gain_S, int32_t SOT_S);
 	bool configure_sensor(SENSCAP_TYPE sct, SENSOR_LEAKAGE slc, CAP_RANGE cap_range, NOISE_MODE noise_mode, ADC_RES adc_res, CAP_OFFSET cap_shift);
 	bool set_i2c_address(uint8_t i2cAddress);
+	void enableDebugging(void);
+	void disableDebugging(void);
 
 private:
 	// Variables
@@ -220,7 +220,9 @@ private:
 	SAMPLE_RATE_DELAY _sampleDelay;				// delay in microseconds to allow the zssc3230 to proccess the ssc mathematics, this halts the microcontroller
 	float _capRange;				// capaitance range stored to use for the read_ssc_cap and read_ssc_cap_cyc functions. is updated in the configure_sensor function
 	float _capOffset;				// capaitance offset stored to use for the read_ssc_cap and read_ssc_cap_cyc functions. is updated in the configure_sensor function
-	
+	uint8_t _adcResolution;			// the resolution of the adc
+	bool _debug_simple = false;		// simle user activated debugging
+	bool _debug_advanced = false;	// advanced debugging - Shows i2c data transfer and binary register values
 
 	// Methods
 	bool _read_zssc3230_config(void);

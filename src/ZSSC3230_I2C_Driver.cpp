@@ -17,9 +17,9 @@ bool ZSSC3230::begin(uint8_t deviceAddress, TwoWire &wirePort)
 	// if no device is connected, return false
 	if (_is_connected() == false)
 	{
-#if DEBUG_ZSSC3230 == 1
-		Serial.println("No device connected");
-#endif
+		if (_debug_simple == true) {
+			Serial.println(F("No device connected"));
+		}
 		return false;
 	}
 
@@ -28,9 +28,9 @@ bool ZSSC3230::begin(uint8_t deviceAddress, TwoWire &wirePort)
 
 	if (sleep_mode() != 0)	// enter sleep mode as a defualt
 	{
-#if DEBUG_ZSSC3230 == 1
-		Serial.println("Startup sleep mode entry failed");
-#endif
+		if (_debug_simple == true) {
+			Serial.println(F("Startup sleep mode entry failed"));
+		}
 		return false;
 	}
 
@@ -38,9 +38,9 @@ bool ZSSC3230::begin(uint8_t deviceAddress, TwoWire &wirePort)
 
 	// set the sample time for the sensor
 	if (_read_zssc3230_config() == false) {
-#if DEBUG_ZSSC3230 == 1
-		Serial.println("Configuration read failed");
-#endif
+		if (_debug_simple == true) {
+			Serial.println(F("Configuration read failed"));
+		}
 		return false;
 	}
 
@@ -57,6 +57,8 @@ bool ZSSC3230::begin(uint8_t deviceAddress, TwoWire &wirePort)
 bool ZSSC3230::_is_connected(void)
 {
 	_i2cPort->beginTransmission(_deviceAddress);
+	uint8_t temp = _i2cPort->endTransmission();
+	Serial.println(temp);
 	if (_i2cPort->endTransmission() != 0)
 		return (false); //Sensor did not ACK
 	return (true);    //All good
@@ -236,15 +238,15 @@ bool ZSSC3230::read_zssc3230(uint8_t *buffer, uint8_t len)
 		buffer[i++] = _i2cPort->read();  // Receive a byte & push it into the buf
 	}
 
-#if DEBUG_ZSSC3230 == 1
-	  Serial.print("I2C Data Transfer: ");
-	  uint8_t x = 0;
-	  while(x < len - 1) {
-	    Serial.print(buffer[x++], BIN);
-	   Serial.print(' ');
-	 }
-	  Serial.println(buffer[x], BIN);
-#endif
+	if (_debug_advanced == true) {
+		Serial.print(F("I2C Data Transfer: "));
+		uint8_t x = 0;
+		while (x < len - 1) {
+			Serial.print(buffer[x++], BIN);
+			Serial.print(' ');
+		}
+		Serial.println(buffer[x], BIN);
+	}
 
 	if (i == len)
 		return true;
@@ -350,16 +352,16 @@ bool ZSSC3230::_read_zssc3230_config(void) {
 		cap_offset = buffer[2] & 0x3F;
 		adc_res = (buffer[2] & 0xC0) >> 6;
 
-#if DEBUG_ZSSC3230 == 1
-		Serial.print("Noise Mode = ");
-		Serial.println(noise_mode, BIN);
-		Serial.print("Cap Range = ");
-		Serial.println(cap_range, BIN);
-		Serial.print("Cap Offset = ");
-		Serial.println(cap_offset, BIN);
-		Serial.print("ADC Resolution = ");
-		Serial.println(adc_res, BIN);
-#endif
+		if (_debug_advanced == true) {
+			Serial.print(F("Noise Mode = "));
+			Serial.println(noise_mode, BIN);
+			Serial.print(F("Cap Range = "));
+			Serial.println(cap_range, BIN);
+			Serial.print(F("Cap Offset = "));
+			Serial.println(cap_offset, BIN);
+			Serial.print(F("ADC Resolution = "));
+			Serial.println(adc_res, BIN);
+		}
 	}
 
 	
@@ -367,15 +369,19 @@ bool ZSSC3230::_read_zssc3230_config(void) {
 		switch (adc_res) {
 		case ADC_12_BIT:
 			_sampleDelay = ADC_12_BIT_NM_OFF;
+			_adcResolution = 12;
 			break;
 		case ADC_14_BIT:
 			_sampleDelay = ADC_14_BIT_NM_OFF;
+			_adcResolution = 14;
 			break;
 		case ADC_16_BIT:
 			_sampleDelay = ADC_16_BIT_NM_OFF;
+			_adcResolution = 16;
 			break;
 		case ADC_18_BIT:
 			_sampleDelay = ADC_18_BIT_NM_OFF;
+			_adcResolution = 18;
 			break;
 		}
 	}
@@ -383,38 +389,49 @@ bool ZSSC3230::_read_zssc3230_config(void) {
 		switch (adc_res) {
 		case ADC_12_BIT:
 			_sampleDelay = ADC_12_BIT_NM_ON;
+			_adcResolution = 12;
 			break;
 		case ADC_14_BIT:
 			_sampleDelay = ADC_14_BIT_NM_ON;
+			_adcResolution = 14;
 			break;
 		case ADC_16_BIT:
 			_sampleDelay = ADC_16_BIT_NM_ON;
+			_adcResolution = 16;
 			break;
 		case ADC_18_BIT:
 			_sampleDelay = ADC_18_BIT_NM_ON;
+			_adcResolution = 18;
 			break;
 		}
 	}
 
-	_capRange = (cap_range + 1) / 2;	// convert the input cap_range into a value that can be used for read_ssc_cap and read_ssc_cap_cyc
+	_capRange = (cap_range + 1) / 2.0f;	// convert the input cap_range into a value that can be used for read_ssc_cap and read_ssc_cap_cyc
 
-	// conver the cap_offset into a value that can be used for read_ssc_cap and read_ssc_cap_cyc to give the proper capacitance range and offset
+	// convert the cap_offset into a value that can be used for read_ssc_cap and read_ssc_cap_cyc to give the proper capacitance range and offset
 	if (cap_offset == OFFSET_0_pF_0)
 		_capOffset = 0;
 	else
-		_capOffset = cap_offset / 4;
+		_capOffset = cap_offset / 4.0f;
 
-#if DEBUG_ZSSC3230 == 1
-	Serial.print("Sample delay set to ");
-	Serial.print(_sampleDelay);
-	Serial.println("us");
-	Serial.print("Capacitance range set to +/-");
-	Serial.print(_capRange);
-	Serial.println("pF");
-	Serial.print("Capacitance offset set to ");
-	Serial.print(_capOffset);
-	Serial.println("pF");
-#endif
+	if (_debug_simple == true) {
+		Serial.println(F("Configuration Successful: "));
+		Serial.print(F("Noise mode "));
+		(noise_mode == 0) ? Serial.println(F("off")) : Serial.println(F("on"));
+		Serial.print(F("Sample delay set to "));
+		Serial.print(_sampleDelay);
+		Serial.println(F("us"));
+		Serial.print(F("ADC Resolution set to "));
+		Serial.print(_adcResolution);
+		Serial.println(F("-bit"));
+		Serial.print(F("Capacitance range set to +/-"));
+		Serial.print(_capRange);
+		Serial.println(F("pF"));
+		Serial.print(F("Capacitance offset set to "));
+		Serial.print(_capOffset);
+		Serial.println(F("pF"));
+		delay(1);
+	}
 	
 	return true;
 }
@@ -444,20 +461,20 @@ bool ZSSC3230::calibrate_zssc3230(int32_t Offset_S, int32_t Gain_S, int32_t SOT_
 	uint32_t Gain_S_Mag = abs(Gain_S);
 	uint32_t SOT_S_Mag = abs(SOT_S);
 
-#if DEBUG_ZSSC3230 == 1
-	Serial.print("Debug Offset S in Sign Mag: ");
-	Serial.print(sign_offset_s, BIN);
-	Serial.print(" - ");
-	Serial.println(Offset_S_Mag, BIN);
-	Serial.print("Debug Gain S in Sign Mag: ");
-	Serial.print(sign_offset_s, BIN);
-	Serial.print(" - ");
-	Serial.println(Gain_S_Mag, BIN);
-	Serial.print("Debug SOT S in Sign Mag: ");
-	Serial.print(sign_offset_s, BIN);
-	Serial.print(" - ");
-	Serial.println(SOT_S_Mag, BIN);
-#endif
+	if (_debug_advanced == true) {
+		Serial.print(F("Debug Offset S in Sign Mag: "));
+		Serial.print(sign_offset_s, BIN);
+		Serial.print(F(" - "));
+		Serial.println(Offset_S_Mag, BIN);
+		Serial.print(F("Debug Gain S in Sign Mag: "));
+		Serial.print(sign_offset_s, BIN);
+		Serial.print(F(" - "));
+		Serial.println(Gain_S_Mag, BIN);
+		Serial.print(F("Debug SOT S in Sign Mag: "));
+		Serial.print(sign_offset_s, BIN);
+		Serial.print(F(" - "));
+		Serial.println(SOT_S_Mag, BIN);
+	}
 
 	// write bits 15:0 of Offset_S to register 0x03
 	status1 += write_zssc3230(0x23, (Offset_S_Mag & 0x00FFFF));
@@ -528,3 +545,16 @@ bool ZSSC3230::set_i2c_address(uint8_t i2cAddress) {
 
 	return false;	// ERROR
 }
+
+
+void ZSSC3230::enableDebugging(void)
+{
+	_debug_simple = true;
+}
+
+void ZSSC3230::disableDebugging(void)
+{
+	_debug_simple = false;
+}
+
+
