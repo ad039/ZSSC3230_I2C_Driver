@@ -210,8 +210,8 @@ public:
 	bool calibrate_zssc3230(int32_t Offset_S, int32_t Gain_S, int32_t SOT_S);
 	bool configure_sensor(SENSCAP_TYPE sct, SENSOR_LEAKAGE slc, CAP_RANGE cap_range, NOISE_MODE noise_mode, ADC_RES adc_res, CAP_OFFSET cap_shift);
 	bool set_i2c_address(uint8_t i2cAddress);
-	void enableDebugging(void);
-	void disableDebugging(void);
+	void enable_debugging(void);
+	void disable_debugging(void);
 
 private:
 	// Variables

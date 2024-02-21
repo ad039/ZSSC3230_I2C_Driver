@@ -547,12 +547,12 @@ bool ZSSC3230::set_i2c_address(uint8_t i2cAddress) {
 }
 
 
-void ZSSC3230::enableDebugging(void)
+void ZSSC3230::enable_debugging(void)
 {
 	_debug_simple = true;
 }
 
-void ZSSC3230::disableDebugging(void)
+void ZSSC3230::disable_debugging(void)
 {
 	_debug_simple = false;
 }

@@ -31,7 +31,7 @@ void setup() {
   Wire.setClock(400000); // increase the i2c clock speed to fast mode (400kHz)
 
   // enable debugging
-  //zssc3230.enableDebugging();
+  //zssc3230.enable_debugging();
 
   // initialise the zssc3230 sensor
   while(1) {
