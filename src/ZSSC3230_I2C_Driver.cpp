@@ -57,8 +57,6 @@ bool ZSSC3230::begin(uint8_t deviceAddress, TwoWire &wirePort)
 bool ZSSC3230::_is_connected(void)
 {
 	_i2cPort->beginTransmission(_deviceAddress);
-	uint8_t temp = _i2cPort->endTransmission();
-	Serial.println(temp);
 	if (_i2cPort->endTransmission() != 0)
 		return (false); //Sensor did not ACK
 	return (true);    //All good
